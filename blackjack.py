@@ -19,9 +19,9 @@ class Deck():
         self.num_decks = num_decks
 
     #Function to shuffle playing deck
-    def shuffle_deck(self, starting_deck):
+    def shuffle_deck(self):
         new_shuffle = []
-        cards_to_shuffle = starting_deck.copy()
+        cards_to_shuffle = self.ordered_deck.copy()
         while len(cards_to_shuffle) > 0:
             new_shuffle.append(cards_to_shuffle.pop(random.randint(0, len(cards_to_shuffle) - 1)))
         return new_shuffle
@@ -40,7 +40,7 @@ class Deck():
         
         #Reshuffles deck at a minimum point, depending on the number players and number of decks
         if len(self.shuffled_deck) < (num_players + 1) * 6 * self.num_decks:
-            self.shuffled_deck = self.shuffle_deck(self.ordered_deck)
+            self.shuffled_deck = self.shuffle_deck()
         
         return player_hands
 
