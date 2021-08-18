@@ -1,21 +1,25 @@
 import random
 
 #Will simulate the experience of playing blackjack in the casino right in the terminal of the computer
-
-class Deck():
+    
+#Class that will actually be used to play the game of blackjack
+class Game():
     card_values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
     card_suits = ["♣", "♠", "♦", "♥"]
+
     def __init__(self, num_decks=1):
+        self.num_players = 0
+        self.num_decks = num_decks
         #Sets up ordered deck for easy shuffling
         self.ordered_deck = []
         index = 0
-        for n in range(num_decks):
-            for card in Deck.card_values.keys():
+        for n in range(self.num_decks):
+            for card in Game.card_values.keys():
                 for i in range(4):
-                    self.ordered_deck.append(card + Deck.card_suits[i])
+                    self.ordered_deck.append(card + Game.card_suits[i])
                 index += 4
-        #Shuffles deck one card at a time
-        self.shuffled_deck = self.shuffle_deck(self.ordered_deck)
+        #Shuffles deck one card at a time to create playing deck
+        self.playing_deck = self.shuffle_deck()
         self.num_decks = num_decks
 
     #Function to shuffle playing deck
@@ -44,16 +48,15 @@ class Deck():
         
         return player_hands
 
-test_deck = Deck()
-
-#Class that will actually be used to play the game of blackjack
-class Game():
-
-    def __init__(self, num_players=1, num_decks=1):
-        self.num_players = num_players
-        self.playing_deck = Deck(num_decks)
-        
     def play(self):
+        #Asks for number of players in the game; must be between 1 and 8
+        self.num_players = int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n\n"))
+        while not self.num_players in [1, 2, 3, 4, 5, 6, 7, 8]:
+            print("I'm sorry, there is a minimum of one player and a maximum of 8 at this table. Please try again.\n")
+            self.num_players = int(input("How many players do we have today?\n"))
+        
+        print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total. Let's play!")
+            
         #Collects chip buy-in from each player and allows them to name themselves if they wish
 
         #At the beginning of each round, asks each player to make their bet; must be an integer, at least 1, and not more than the number of chips they have remaining
@@ -70,8 +73,7 @@ class Game():
 
         #The game continues until the last remaining player(s) elect to leave
         pass
-print(test_deck.shuffled_deck)
 
-print(test_deck.deal_cards(3))
+test_game = Game()
+test_game.play()
 
-print(test_deck.shuffled_deck)
