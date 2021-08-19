@@ -50,14 +50,43 @@ class Game():
 
     def play(self):
         #Asks for number of players in the game; must be between 1 and 8
-        self.num_players = int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n\n"))
-        while not self.num_players in [1, 2, 3, 4, 5, 6, 7, 8]:
+        try:
+            self.num_players = round(int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n")))
+        except ValueError:
+            self.num_players = 0
+        while not (1 <= self.num_players and self.num_players <= 8):
             print("I'm sorry, there is a minimum of one player and a maximum of 8 at this table. Please try again.\n")
-            self.num_players = int(input("How many players do we have today?\n"))
+            try:
+                self.num_players = int(input("How many players do we have today?\n"))
+            except ValueError:
+                self.num_players = 0
+
+
+        print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total.")
         
-        print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total. Let's play!")
-            
+        #Creates player dictionary; each player's key is their name, and the value is a list of chip balance and overall winnings/losses
+        players = {}
+        for i in range(1, self.num_players + 1):
+            players[f"Player {i}"] = [0, 0]
+            new_name = input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
+            if new_name != "":
+                players[new_name] = players.pop(f"Player {i}")
+            else:
+                new_name = f"Player {i}"
+            print(f"Okay, {new_name}, glad to have you.\n")
         #Collects chip buy-in from each player and allows them to name themselves if they wish
+
+        print("\n\nNow that we have your names, it's time to collect your buy-ins. We'll go around the table, player by player. You can start with as many chips as you want, as long as it's a whole number and it's more than zero.")
+
+        for key in players.keys():
+            try:
+                players[key][0] = round(int(input(f"{key}, what's your buy-in?\n")))
+            except ValueError:
+                players[key][0] = 100
+                print("Since you clearly don't know how to type a whole number, I'll just take 100 chips as your buy-in.")
+            print(f"{players[key][0]} chips it is for you, {key}!\n")
+        
+        print("\n\nNow that all of that's out of the way, let's finally play the game!")
 
         #At the beginning of each round, asks each player to make their bet; must be an integer, at least 1, and not more than the number of chips they have remaining
 
@@ -72,8 +101,6 @@ class Game():
         #Each player is asked whether they would like to continue. Players who have been reduced to 0 chips have the option to buy back in with new chips, but their overall balance is still tracked. Players who elect to leave the game are removed after being told their total earnings/losses, and the next round is played with the remaining players
 
         #The game continues until the last remaining player(s) elect to leave
-        pass
 
 test_game = Game()
 test_game.play()
-
