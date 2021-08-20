@@ -89,7 +89,7 @@ class Game():
         print("\n\nNow that all of that's out of the way, let's finally play the game!")
 
         #At the beginning of each round, asks each player to make their bet; must be an integer, at least 1, and not more than the number of chips they have remaining
-
+        print("Time to collect the bets.")
         #Each player is dealt their cards, including the dealer. the dealer's second card is hidden from all of the players
 
         #Each player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; otherwise, they continue until they decide to stay
