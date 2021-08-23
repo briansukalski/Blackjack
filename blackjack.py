@@ -1,7 +1,16 @@
 import random
 
 #Will simulate the experience of playing blackjack in the casino right in the terminal of the computer
-    
+
+#Class for the players of the game
+class Player(): 
+    def __init__(self):
+        self.name = "Name"
+        self.hand = []
+        self.chips = 0
+        self.bet = 0
+        self.earnings = 0
+
 #Class that will actually be used to play the game of blackjack
 class Game():
     card_values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
@@ -64,27 +73,35 @@ class Game():
 
         print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total.")
         
-        #Creates player dictionary; each player's key is their name, and the value is a list of chip balance and overall winnings/losses
-        players = {}
+        #Sets name for each player in the game and builds out list of players
+        players = []
+        player_names = []
         for i in range(1, self.num_players + 1):
-            players[f"Player {i}"] = [0, 0]
-            new_name = input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
-            if new_name != "":
-                players[new_name] = players.pop(f"Player {i}")
-            else:
-                new_name = f"Player {i}"
+            new_player = Player()
+            players.append(new_player)
+            while True:
+                new_name = input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
+                if new_name != "" and new_name not in player_names:
+                    new_player.name = new_name
+                    break
+                elif new_name == "":
+                    new_player.name = f"Player {i}"
+                    break
+                else:
+                    print(f"I'm sorry, that name has already been taken. Please try again.\n")
             print(f"Okay, {new_name}, glad to have you.\n")
+            player_names.append(new_name)
         #Collects chip buy-in from each player and allows them to name themselves if they wish
 
         print("\n\nNow that we have your names, it's time to collect your buy-ins. We'll go around the table, player by player. You can start with as many chips as you want, as long as it's a whole number and it's more than zero.")
 
-        for key in players.keys():
+        for player in players:
             try:
-                players[key][0] = round(int(input(f"{key}, what's your buy-in?\n")))
+                player.chips = round(int(input(f"{player.name}, what's your buy-in?\n")))
             except ValueError:
-                players[key][0] = 100
+                player.chips = 100
                 print("Since you clearly don't know how to type a whole number, I'll just take 100 chips as your buy-in.")
-            print(f"{players[key][0]} chips it is for you, {key}!\n")
+            print(f"{player.chips} chips it is for you, {player.name}!\n")
         
         print("\n\nNow that all of that's out of the way, let's finally play the game!")
 
