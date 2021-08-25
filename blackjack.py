@@ -12,7 +12,7 @@ class Card():
         self.value = Card.card_values[self.title]
 
     #String representation of Card
-    def __str__(self):
+    def __repr__(self):
         return self.title + self.suit
     
 #Class for the players of the game
@@ -148,8 +148,30 @@ class Game():
                 self.playing_deck = self.shuffle_deck()
                 print("Done.\n")
 
+        def print_hands(players, initial_deal):
+            for player in players:
+                #Displays player name
+                msg = f"{player.name}"
 
+                #Displays bet
+                if(player.name != "Dealer"):
+                    msg += f"(Bet = {player.bet})"
+                
+                msg += ":  "
+                #Displays cards (hides dealer's second card if not at end of round)
+                for card in player.hand:
+                    if card == player.hand[-1] and player.name == "Dealer" and initial_deal == True:
+                        msg += "??  "
+                    else:
+                        msg += repr(card) + "  "
 
+                #Displays current hand value
+                if card == player.hand[-1] and player.name == "Dealer" and initial_deal == True:
+                    msg += f"  Current Score = {player.hand_value - player.hand[-1].value}"
+                else:
+                    msg += f"  Current Score = {player.hand_value}"
+
+                print(msg)
         #Game flow
         #Sets number of players
         self.num_players = set_num_players()
@@ -177,16 +199,12 @@ class Game():
             print("\n\n\nTime to collect the bets for the round.\n")
             collect_bets(self.players)
 
-            #Each player is dealt their cards, including the dealer. the dealer's second card is hidden from all of the players
+            #Each player is dealt their cards
             print("\nTime to deal the cards.\n")
             deal_cards(self.players)
             #Displays hands and bets
 
-            for player in self.players:
-                if(player.name != "Dealer"):
-                    print(f"{player.name} (Bet = {player.bet}):    {player.hand[0]}  {player.hand[1]}    Current Score = {player.hand_value}")
-                else:
-                    print(f"{player.name}:    {player.hand[0]}  ??     Current Score = {player.hand_value - player.hand[1].value}")
+            print_hands(self.players, True)
 
             #Each player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; otherwise, they continue until they decide to stay
 
