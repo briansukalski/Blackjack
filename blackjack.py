@@ -2,11 +2,24 @@ import random
 
 #Will simulate the experience of playing blackjack in the casino right in the terminal of the computer
 
+#Class for the cards in the game
+class Card():
+    card_values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
+    card_suits = ["♣", "♠", "♦", "♥"]
+    def __init__(self, title, suit):
+        self.title = title
+        self.suit = suit
+        self.value = Card.card_values[self.title]
+
+    #String representation of Card
+    def __str__(self):
+        return self.title + self.suit
+    
 #Class for the players of the game
 class Player(): 
     def __init__(self):
         self.name = "Name"
-        self.cards = []
+        self.hand = []
         self.hand_value = 0
         self.chips = 0
         self.bet = 0
@@ -14,28 +27,24 @@ class Player():
 
 #Class that will actually be used to play the game of blackjack
 class Game():
-    card_values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
-    card_suits = ["♣", "♠", "♦", "♥"]
 
     def __init__(self, num_decks=1):
         self.num_players = 0
         self.num_decks = num_decks
+        self.round_num = 0
         self.players = []
-        self.player_names = []
         self.eliminated_players = []
         #Sets up ordered deck for easy shuffling
         self.ordered_deck = []
-        index = 0
         for n in range(self.num_decks):
-            for card in Game.card_values.keys():
-                for i in range(4):
-                    self.ordered_deck.append(card + Game.card_suits[i])
-                index += 4
+            for card_title in Card.card_values.keys():
+                for card_suit in Card.card_suits:
+                    self.ordered_deck.append(Card(card_title, card_suit))
         #Shuffles deck one card at a time to create playing deck
         self.playing_deck = self.shuffle_deck()
         self.num_decks = num_decks
 
-    #Function to shuffle playing deck
+    #Function to shuffle playing deck(s)
     def shuffle_deck(self):
         new_shuffle = []
         cards_to_shuffle = self.ordered_deck.copy()
@@ -43,79 +52,73 @@ class Game():
             new_shuffle.append(cards_to_shuffle.pop(random.randint(0, len(cards_to_shuffle) - 1)))
         return new_shuffle
 
-    #Deals cards to all players in the game, including the dealer, removing them from the top of the shuffled deck
-    def deal_cards(self):
-
-        #Each player starts with two cards
-        for i in range(2):
-            for player in self.players:
-                player.cards.append(self.playing_deck.pop(0))
-                player.hand_value += Game.card_values[player.cards[i][:-1]]
-        
-        #Reshuffles deck at a minimum point, depending on the number players and number of decks
-        if len(self.playing_deck) < (self.num_players + 1) * 6 * self.num_decks:
-            print("Low on cards. Reshuffling the deck...")
-            self.playing_deck = self.shuffle_deck()
-            print("Done.\n")
-
-
     def play(self):
-        #Asks for number of players in the game; must be between 1 and 8
-        while True:
-            try:
-                self.num_players = round(int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n")))
-            except ValueError:
-                print("I'm sorry, I don't recognize this as a whole number. Please try again.\n")
-            if self.num_players >= 1 and self.num_players <= 8:
-                break
-            else:
-                print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
 
+        #Series of helper methods to call throughout the game
 
-        print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total.")
-        
-        #Sets name for each player in the game and builds out list of players
-        for i in range(1, self.num_players + 1):
-            new_player = Player()
-            self.players.append(new_player)
-            while True:
-                new_name = input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
-                if new_name != "" and (new_name not in self.player_names) and new_name.lower() != "dealer":
-                    new_player.name = new_name
-                    break
-                elif new_name == "":
-                    new_player.name = f"Player {i}"
-                    break
-                else:
-                    print(f"I'm sorry, that name has already been taken. Please try again.\n")
-            print(f"Okay, {new_player.name}, glad to have you.\n")
-            self.player_names.append(new_player.name)
-        #Adds dealer
-        self.players.append(Player())
-        self.players[-1].name = "Dealer"
-
-        #Collects chip buy-in from each player (except for the dealer)
-        print("\n\nNow that we have your names, it's time to collect your buy-ins. We'll go around the table, player by player. You can start with as many chips as you want, as long as it's a whole number and it's more than zero.\n")
-
-        for player in self.players[:-1]:
+        #Asks for and sets number of players in the game; must be between 1 and 8
+        def set_num_players():
             while True:
                 try:
-                    player.chips = round(int(input(f"{player.name}, what's your buy-in?\n")))
-                    if player.chips <= 0:
-                        print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
-                    else:
-                        break
+                    num_players = round(int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n")))
                 except ValueError:
-                    print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
-            print(f"\n{player.chips} chips it is for you, {player.name}!\n")
-        
-        print("\n\nNow that all of that's out of the way, let's finally play the game!")
+                    print("I'm sorry, I don't recognize this as a whole number. Please try again.\n")
+                if num_players >= 1 and num_players <= 8:
+                    break
+                else:
+                    print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
+            return num_players
 
-        #Game continues until there are no players left
-        while len(self.players) > 0:
-            #At the beginning of each round, asks each player to make their bet; must be an integer, at least 1, and not more than the number of chips they have remaining
-            print("\n\n\nTime to collect the bets for the round.\n")
-            for player in self.players[:-1]:
+        #Creates player list
+        def set_players(num_players):
+            players = []
+            for i in range(1, num_players + 1):
+                players.append(Player())
+            #Adds dealer
+            players.append(Player())
+            players[-1].name = "Dealer"
+
+            return players
+
+        def get_names(players):
+            #Sets name for each player in the game (except for the dealer)
+            player_names = ["dealer"]
+            #Counter for player number
+            i = 1
+            for player in players[:-1]:
+                while True:
+                    new_name = input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
+                    if new_name != "" and (new_name.lower() not in player_names):
+                        player.name = new_name
+                        i += 1
+                        break
+                    elif new_name == "":
+                        player.name = f"Player {i}"
+                        i += 1
+                        break
+                    else:
+                        print(f"I'm sorry, that name has already been taken. Please try again.\n")
+                print(f"Okay, {player.name}, glad to have you.\n")
+                player_names.append(new_name.lower())
+
+        #Collects chip buy-in from each player (except for the dealer)
+        def collect_buyin(players):
+            for player in players[:-1]:
+                while True:
+                    try:
+                        num_chips = round(int(input(f"{player.name}, what's your buy-in?\n")))
+                        if num_chips <= 0:
+                            print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
+                        else:
+                            player.chips = num_chips
+                            break
+                    except ValueError:
+                        print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
+                print(f"\n{player.chips} chips it is for you, {player.name}!\n")
+        
+        #Collects bets from each player (except for the dealer): must be a whole number greater than 0 and less than or equal to the number of chips the player has remaining
+        def collect_bets(players):
+            for player in players[:-1]:
                 while True:
                     try:
                         round_bet = round(int(input(f"{player.name}, What is your bet? (Current Balance = {player.chips} chips)\n")))
@@ -129,18 +132,61 @@ class Game():
                     except ValueError:
                         print("I'm sorry, your bet must be a whole number greater than 0. Please try again.\n")
                 print(f"\n{player.bet} chips on the table for you, {player.name}. Good luck!\n")
+        
+        #Deals cards to all players in the game, including the dealer, removing them from the top of the shuffled deck
+        def deal_cards(players):
+            #Each player starts with two cards
+            for i in range(2):
+                for player in players:
+                    new_card = self.playing_deck.pop(0)
+                    player.hand.append(new_card)
+                    player.hand_value += new_card.value
             
-            #Each player is dealt their cards, including the dealer. the dealer's second card is hidden from all of the players
+            #Reshuffles deck at a minimum point, depending on the number players and number of decks
+            if len(self.playing_deck) < (len(players)) * 6 * self.num_decks:
+                print("Low on cards. Reshuffling the deck...")
+                self.playing_deck = self.shuffle_deck()
+                print("Done.\n")
 
+
+
+        #Game flow
+        #Sets number of players
+        self.num_players = set_num_players()
+        print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total.")
+
+        #Initializes player list
+        self.players = set_players(self.num_players)
+        
+        #Collects player names
+        get_names(self.players)
+
+        #Collects chip buy-ins
+        print("\n\nNow that we have your names, it's time to collect your buy-ins. We'll go around the table, player by player. You can start with as many chips as you want, as long as it's a whole number and it's more than zero.\n")
+        
+        collect_buyin(self.players)
+
+        print("\n\nNow that all of that's out of the way, let's finally play the game!")
+
+        #Game continues until there are no players left
+        while len(self.players) > 0:
+            self.round_num += 1
+            print(f"\nBeginning Round {self.round_num}...\n")
+            
+            #Collects bets
+            print("\n\n\nTime to collect the bets for the round.\n")
+            collect_bets(self.players)
+
+            #Each player is dealt their cards, including the dealer. the dealer's second card is hidden from all of the players
             print("\nTime to deal the cards.\n")
-            self.deal_cards()
+            deal_cards(self.players)
             #Displays hands and bets
 
             for player in self.players:
                 if(player.name != "Dealer"):
-                    print(f"{player.name} (Bet = {player.bet}):    {player.cards[0]}  {player.cards[1]}    Current Score = {player.hand_value}")
+                    print(f"{player.name} (Bet = {player.bet}):    {player.hand[0]}  {player.hand[1]}    Current Score = {player.hand_value}")
                 else:
-                    print(f"{player.name}:    {player.cards[0]}  ??     Current Score = {player.hand_value - Game.card_values[player.cards[1][:-1]]}")
+                    print(f"{player.name}:    {player.hand[0]}  ??     Current Score = {player.hand_value - player.hand[1].value}")
 
             #Each player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; otherwise, they continue until they decide to stay
 
