@@ -69,7 +69,7 @@ class Game():
                     print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
             return num_players
 
-        #Creates player list
+        #Creates player list; dealer is always last player in list
         def set_players(num_players):
             players = []
             for i in range(1, num_players + 1):
@@ -98,7 +98,7 @@ class Game():
                         break
                     else:
                         print(f"I'm sorry, that name has already been taken. Please try again.\n")
-                print(f"Okay, {player.name}, glad to have you.\n")
+                print(f"\nOkay, {player.name}, glad to have you.\n")
                 player_names.append(new_name.lower())
 
         #Collects chip buy-in from each player (except for the dealer)
@@ -113,7 +113,7 @@ class Game():
                             player.chips = num_chips
                             break
                     except ValueError:
-                        print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
+                        print("\nI'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
                 print(f"\n{player.chips} chips it is for you, {player.name}!\n")
         
         #Collects bets from each player (except for the dealer): must be a whole number greater than 0 and less than or equal to the number of chips the player has remaining
@@ -141,17 +141,12 @@ class Game():
                     new_card = self.playing_deck.pop(0)
                     player.hand.append(new_card)
                     player.hand_value += new_card.value
-            
-            #Reshuffles deck at a minimum point, depending on the number players and number of decks
-            if len(self.playing_deck) < (len(players)) * 6 * self.num_decks:
-                print("Low on cards. Reshuffling the deck...")
-                self.playing_deck = self.shuffle_deck()
-                print("Done.\n")
 
-        def print_hands(players, initial_deal):
+        def print_hands(players, initial_deal=True):
+            msg = "\n"
             for player in players:
                 #Displays player name
-                msg = f"{player.name}"
+                msg += f"{player.name} "
 
                 #Displays bet
                 if(player.name != "Dealer"):
@@ -171,7 +166,61 @@ class Game():
                 else:
                     msg += f"  Current Score = {player.hand_value}"
 
-                print(msg)
+                #Adds a couple of line breaks at the end
+                msg += "\n"
+
+            print(msg)
+
+        #Player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; if they reach 21 exactly, they have a blackjack. Otherwise, they continue on until they decide to stay.
+        def hit_or_stay(player):
+            while True:
+                response = input(f"{player.name}, Would you like to hit or stay? (hit/stay)\n")
+                if response.lower() == "stay":
+                    print(f"\n{player.name}, your score is {player.hand_value}.")
+                    print_hands(self.players)
+                    break
+                elif response.lower() == "hit":
+                    card_to_deal = self.playing_deck.pop(0)
+                    player.hand.append(card_to_deal)
+                    player.hand_value += card_to_deal.value
+                    print(f"\n{player.name}, Your new card is {card_to_deal}, bringing your score to {player.hand_value}.")
+                    print_hands(self.players)
+                    if player.hand_value == 21:
+                        print("Blackjack!\n")
+                        break
+                    elif player.hand_value > 21:
+                        print("Bust!\n")
+                        break
+                else:
+                    print("\nCommand not recognized. Please try again.\n")
+
+        #Dealer plays out their hand according to rules: must hit if value is under 17; otherwise, must stay
+        def resolve_dealer(dealer):
+            print(f"\nTime to reveal the dealer's card... it's {dealer.hand[-1]}!")
+            print_hands(self.players, False)
+            while dealer.hand_value < 17:
+                card_to_deal = self.playing_deck.pop(0)
+                dealer.hand.append(card_to_deal)
+                dealer.hand_value += card_to_deal.value
+                print(f"\nThe dealer flips over a new card... {card_to_deal}. The dealer's score is now {dealer.hand_value}.")
+                print_hands(self.players, False)
+
+            if dealer.hand_value == 21:
+                print("Dealer Blackjack!\n")
+            elif dealer.hand_value > 21:
+                print("Dealer busts!\n")
+            else:
+                print(f"The dealer stays at a score of {dealer.hand_value}.")
+
+        #Chip balances are adjusted for each player according to whether or not they beat the dealer in that round. In the event of a tie score (as long as the player has NOT busted), the player simply gets back the chips that they bet
+        def resolve_round(players):
+            winning_players = []
+            losing_players = []
+            push_players = []
+            dealer = players[-1]
+            for player in players[:-1]:
+                pass
+            
         #Game flow
         #Sets number of players
         self.num_players = set_num_players()
@@ -193,10 +242,16 @@ class Game():
         #Game continues until there are no players left
         while len(self.players) > 0:
             self.round_num += 1
+            #Reshuffles deck at a minimum point, depending on the number players and number of decks
+            if len(self.playing_deck) < (len(self.players)) * 6 * self.num_decks:
+                print("\nLow on cards. Reshuffling the deck...\n")
+                self.playing_deck = self.shuffle_deck()
+                print("Done.\n")
+
             print(f"\nBeginning Round {self.round_num}...\n")
             
             #Collects bets
-            print("\n\n\nTime to collect the bets for the round.\n")
+            print("\nTime to collect the bets for the round.\n")
             collect_bets(self.players)
 
             #Each player is dealt their cards
@@ -204,17 +259,23 @@ class Game():
             deal_cards(self.players)
             #Displays hands and bets
 
-            print_hands(self.players, True)
+            print_hands(self.players)
 
-            #Each player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; otherwise, they continue until they decide to stay
+            #Each player plays out their hand
+            for player in self.players[:-1]:
+                hit_or_stay(player)
 
-            #Dealer plays out their hand according to rules: must hit if value is under 17; otherwise, must stay
+            #Dealer resolves their hand
+            resolve_dealer(self.players[-1])
 
-            #Chip balances are adjusted for each player according to whether or not they beat the dealer in that round. In the event of a tie score (as long as the player has NOT busted), the player simply gets back the chips that they bet
+            #Distributes winnings or takes bets at end of round
+            print("\nResolving the bets...\n")
 
             #Each player is asked whether they would like to continue. Players who have been reduced to 0 chips have the option to buy back in with new chips, but their overall balance is still tracked. Players who elect to leave the game are removed after being told their total earnings/losses, and the next round is played with the remaining players
 
             #The game continues until the last remaining player(s) elect to leave
+
+            input("Press enter to continue")
 
 test_game = Game()
 test_game.play()
