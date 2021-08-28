@@ -61,12 +61,12 @@ class Game():
             while True:
                 try:
                     num_players = round(int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n")))
+                    if num_players >= 1 and num_players <= 8:
+                        break
+                    else:
+                        print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
                 except ValueError:
                     print("I'm sorry, I don't recognize this as a whole number. Please try again.\n")
-                if num_players >= 1 and num_players <= 8:
-                    break
-                else:
-                    print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
             return num_players
 
         #Creates player list; dealer is always last player in list
@@ -173,7 +173,7 @@ class Game():
 
         #Player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; if they reach 21 exactly, they have a blackjack. Otherwise, they continue on until they decide to stay.
         def hit_or_stay(player):
-            while True:
+            while True and player.hand_value < 21:
                 response = input(f"{player.name}, Would you like to hit or stay? (hit/stay)\n")
                 if response.lower() == "stay":
                     print(f"\n{player.name}, your score is {player.hand_value}.")
@@ -185,14 +185,13 @@ class Game():
                     player.hand_value += card_to_deal.value
                     print(f"\n{player.name}, Your new card is {card_to_deal}, bringing your score to {player.hand_value}.")
                     print_hands(self.players)
-                    if player.hand_value == 21:
-                        print("Blackjack!\n")
-                        break
-                    elif player.hand_value > 21:
-                        print("Bust!\n")
-                        break
                 else:
                     print("\nCommand not recognized. Please try again.\n")
+
+                if player.hand_value == 21:
+                    print("\nBlackjack!\n")
+                elif player.hand_value > 21:
+                    print("\nBust!\n")
 
         #Dealer plays out their hand according to rules: must hit if value is under 17; otherwise, must stay
         def resolve_dealer(dealer):
@@ -219,8 +218,109 @@ class Game():
             push_players = []
             dealer = players[-1]
             for player in players[:-1]:
-                pass
+                if player.hand_value <= 21 and (player.hand_value > dealer.hand_value or dealer.hand_value > 21):
+                    winning_players.append(player)
+                elif player.hand_value < dealer.hand_value or player.hand_value > 21:
+                    losing_players.append(player)
+                else:
+                    push_players.append(player)
+                
+            if len(winning_players) > 0:
+                winning_msg = "\nWinning players:    "
+                for player in winning_players:
+                    winning_msg += player.name + f" (+{player.bet} chips)    "
+                    #Winning players get their money back plus their profit in chips
+                    player.chips += player.bet * 2
+                    #Keeps track of players' overall earnings
+                    player.earnings += player.bet
+                winning_msg += "\n"
+            else:
+                winning_msg = "\nWinners: None :(\n"
+
+            if len(losing_players) > 0:
+                losing_msg = "\nLosing players:    "
+                for player in losing_players:
+                    losing_msg += player.name + f" (-{player.bet} chips)    "
+                    #Losing player doesn't get their bet back, and overall earnings are adjusted downward
+                    player.earnings -= player.bet
+                losing_msg += "\n"
+            else:
+                losing_msg = "\nLosers: None :)\n"
+
+            if len(push_players) > 0:
+                push_msg = "\nPush players:    "
+                for player in push_players:
+                    push_msg += player.name + f" ({player.bet} chip bet returned)    "
+                    #Push player gets their bet back
+                    player.chips += player.bet
+                push_msg += "\n"
+            else:
+                push_msg = "\nPush: None :/\n"
             
+            print(winning_msg, losing_msg, push_msg)
+
+        #Each player is asked whether they would like to continue. Players who have been reduced to 0 chips have the option to buy back in with new chips, but their overall balance is still tracked. Players who elect to leave the game are removed after being told their total earnings/losses, and the next round is played with the remaining players
+        def continue_players(players):
+            idx = 0
+            for player in players:
+                #Actions for players with chips remaining
+                if player.chips > 0:
+                    while True:
+                        contin = input(f"\n{player.name}, your current balance is {player.chips}. Would you like to play another round? (yes/no)\n")
+                        if contin.lower() == "yes":
+                            idx += 1
+                            #Resets player hands
+                            player.hand = []
+                            player.hand_value = 0
+                            player.bet = 0
+                            break
+                        elif contin.lower() == "no":
+                            #Removes player from active player list and adds them to eliminated player list
+                            print(f"\nThanks for playing, {player.name}. Your total earnings in this game were {player.earnings} chips.\n")
+                            self.eliminated_players.append(self.players.pop(idx))
+                            idx += 1
+                            break
+                        else:
+                            print("\nCommand not recognized. Please try again.\n")
+                #Actions for players out of chips
+                else:
+                    while True:
+                        contin = input(f"\n{player.name}, you are out of chips! Would you like to buy back in? (yes/no)\n")
+                        if contin.lower() == "yes":
+                            while True:
+                                try:
+                                    player.chips = int(input(f"\n{player.name}, How many chips would you like to buy back in with?\n"))
+                                    if player.chips <= 0:
+                                        print("\nI'm sorry, you must specify a postive whole number of chips. Please try again.\n")
+                                    else:
+                                        print(f"\nOkay {player.name}, you're back in with {player.chips} more chips!\n")
+                                        idx += 1
+                                        player.hand = []
+                                        player.hand_value = 0
+                                        player.bet = 0
+                                        break
+                                except ValueError:
+                                    print("\nI'm sorry, you must specify a positive whole number of chips. Please try again.\n")
+                            break
+                        elif contin.lower() == "no":
+                            #Removes player from active player list and adds them to eliminated player list
+                            print(f"\nThanks for playing, {player.name}. Your total earnings in this game were {player.earnings} chips.\n")
+                            self.eliminated_players.append(self.players.pop(idx))
+                            idx += 1
+                            break
+                        else:
+                            print("\nCommand not recognized. Please try again.\n")
+
+        #Rotates player order for the next round, moving first player to the last position before the dealer, and everybody else forward one
+        def rotate_players(players):
+            if len(players) > 2:
+                new_players_order = players[1:-1] + [players[0]]+ [players[-1]]
+            else:
+                new_players_order = players
+            return new_players_order
+            
+
+
         #Game flow
         #Sets number of players
         self.num_players = set_num_players()
@@ -239,8 +339,8 @@ class Game():
 
         print("\n\nNow that all of that's out of the way, let's finally play the game!")
 
-        #Game continues until there are no players left
-        while len(self.players) > 0:
+        #Game continues until there are no players left (not counting the dealer)
+        while len(self.players) > 1:
             self.round_num += 1
             #Reshuffles deck at a minimum point, depending on the number players and number of decks
             if len(self.playing_deck) < (len(self.players)) * 6 * self.num_decks:
@@ -270,12 +370,22 @@ class Game():
 
             #Distributes winnings or takes bets at end of round
             print("\nResolving the bets...\n")
-
-            #Each player is asked whether they would like to continue. Players who have been reduced to 0 chips have the option to buy back in with new chips, but their overall balance is still tracked. Players who elect to leave the game are removed after being told their total earnings/losses, and the next round is played with the remaining players
+            resolve_round(self.players)
+            
+            #Asks each player whether they wish to play another round
+            continue_players(self.players[:-1])
 
             #The game continues until the last remaining player(s) elect to leave
+            if len(self.players) > 1:
+                print("\nRotating deal order for the next round...\n")
+                self.players = rotate_players(self.players)
+                #resets dealer hand and score
+                self.players[-1].hand = []
+                self.players[-1].hand_value = 0
+                print("\nDone.\n")
+                print("\nOnto the next round!\n")
 
-            input("Press enter to continue")
+        #Once game is over, prints out summary of how each player performed
 
 test_game = Game()
 test_game.play()
