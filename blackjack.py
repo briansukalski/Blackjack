@@ -1,6 +1,19 @@
 import random
+import time
+import sys
 
 #Will simulate the experience of playing blackjack in the casino right in the terminal of the computer
+def scroll_print(msg):
+    time.sleep(0.25)
+    for i in msg:
+        sys.stdout.write(i)
+        sys.stdout.flush()
+        time.sleep(0.01)
+    time.sleep(0.25)
+
+def scroll_input(msg):
+    scroll_print(msg)
+    return input("")
 
 #Class for the cards in the game
 class Card():
@@ -24,6 +37,9 @@ class Player():
         self.chips = 0
         self.bet = 0
         self.earnings = 0
+        self.num_aces = 0
+        self.rounds_played = 0
+        self.buy_in = 0
 
 #Class that will actually be used to play the game of blackjack
 class Game():
@@ -33,7 +49,7 @@ class Game():
         self.num_decks = num_decks
         self.round_num = 0
         self.players = []
-        self.eliminated_players = []
+        self.all_players = []
         #Sets up ordered deck for easy shuffling
         self.ordered_deck = []
         for n in range(self.num_decks):
@@ -60,13 +76,13 @@ class Game():
         def set_num_players():
             while True:
                 try:
-                    num_players = round(int(input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n")))
+                    num_players = round(int(scroll_input("Welcome to the Grand Python Casino! The game today is Blackjack. How many players will be playing? Please enter a number between 1 and 8.\n")))
                     if num_players >= 1 and num_players <= 8:
                         break
                     else:
-                        print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
+                        scroll_print("I'm sorry, there is a minimum of 1 player and a maximum of 8 at this table. Please try again.\n")
                 except ValueError:
-                    print("I'm sorry, I don't recognize this as a whole number. Please try again.\n")
+                    scroll_print("I'm sorry, I don't recognize this as a whole number. Please try again.\n")
             return num_players
 
         #Creates player list; dealer is always last player in list
@@ -87,7 +103,7 @@ class Game():
             i = 1
             for player in players[:-1]:
                 while True:
-                    new_name = input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
+                    new_name = scroll_input(f"\nPlayer {i}, what is your name? If you would like me to just call you player {i}, just press enter without typing anything.\n")
                     if new_name != "" and (new_name.lower() not in player_names):
                         player.name = new_name
                         i += 1
@@ -97,8 +113,8 @@ class Game():
                         i += 1
                         break
                     else:
-                        print(f"I'm sorry, that name has already been taken. Please try again.\n")
-                print(f"\nOkay, {player.name}, glad to have you.\n")
+                        scroll_print(f"I'm sorry, that name has already been taken. Please try again.\n")
+                scroll_print(f"\nOkay, {player.name}, glad to have you.\n")
                 player_names.append(new_name.lower())
 
         #Collects chip buy-in from each player (except for the dealer)
@@ -106,41 +122,47 @@ class Game():
             for player in players[:-1]:
                 while True:
                     try:
-                        num_chips = round(int(input(f"{player.name}, what's your buy-in?\n")))
+                        num_chips = round(int(scroll_input(f"\n{player.name}, what's your buy-in?\n")))
                         if num_chips <= 0:
-                            print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
+                            scroll_print("I'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
                         else:
+                            player.buy_in += num_chips
                             player.chips = num_chips
                             break
                     except ValueError:
-                        print("\nI'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
-                print(f"\n{player.chips} chips it is for you, {player.name}!\n")
+                        scroll_print("\nI'm sorry, your buy-in must be a whole number greater than 0. Please try again.\n")
+                scroll_print(f"\n{player.chips} chips it is for you, {player.name}!\n")
         
         #Collects bets from each player (except for the dealer): must be a whole number greater than 0 and less than or equal to the number of chips the player has remaining
         def collect_bets(players):
             for player in players[:-1]:
                 while True:
                     try:
-                        round_bet = round(int(input(f"{player.name}, What is your bet? (Current Balance = {player.chips} chips)\n")))
+                        round_bet = round(int(scroll_input(f"\n{player.name}, What is your bet? (Current Balance = {player.chips} chips)\n")))
                         if round_bet > player.chips:
-                            print(f"I'm sorry, you can't bet more chips than you have. Please try again.\n")
-                        #If input is valid, adds chips to bet and removes them from chip balance
+                            scroll_print(f"I'm sorry, you can't bet more chips than you have. Please try again.\n")
+                        #If scroll_input is valid, adds chips to bet and removes them from chip balance
                         else:
                             player.bet = round_bet
                             player.chips -= player.bet
                             break
                     except ValueError:
-                        print("I'm sorry, your bet must be a whole number greater than 0. Please try again.\n")
-                print(f"\n{player.bet} chips on the table for you, {player.name}. Good luck!\n")
+                        scroll_print("I'm sorry, your bet must be a whole number greater than 0. Please try again.\n")
+                scroll_print(f"\n{player.bet} chips on the table for you, {player.name}. Good luck!\n")
         
         #Deals cards to all players in the game, including the dealer, removing them from the top of the shuffled deck
-        def deal_cards(players):
-            #Each player starts with two cards
-            for i in range(2):
-                for player in players:
-                    new_card = self.playing_deck.pop(0)
-                    player.hand.append(new_card)
-                    player.hand_value += new_card.value
+        def deal_card(player):
+            #Player is dealt a single card from the top of the deck
+                new_card = self.playing_deck.pop(0)
+                if new_card.title == "A":
+                    player.num_aces += 1
+                player.hand.append(new_card)
+                player.hand_value += new_card.value
+                #Aces are soft; their value switches from 11 to 1 if the player busts
+                if player.hand_value > 21 and player.num_aces > 0:
+                    player.hand_value -= 10
+                    player.num_aces -= 1
+
 
         def print_hands(players, initial_deal=True):
             msg = "\n"
@@ -166,50 +188,49 @@ class Game():
                 else:
                     msg += f"  Current Score = {player.hand_value}"
 
-                #Adds a couple of line breaks at the end
+                #Adds a line break at the end for each player
                 msg += "\n"
+            
+            #Adds a couple of line breaks at the end of the printout
+            msg += "\n\n"
 
-            print(msg)
+            scroll_print(msg)
 
         #Player gets their opportunity to decide what to do: hit or stay. If they go over 21, they bust and their turn is immediately over; if they reach 21 exactly, they have a blackjack. Otherwise, they continue on until they decide to stay.
         def hit_or_stay(player):
             while True and player.hand_value < 21:
-                response = input(f"{player.name}, Would you like to hit or stay? (hit/stay)\n")
+                response = scroll_input(f"{player.name}, Would you like to hit or stay? (hit/stay)\n")
                 if response.lower() == "stay":
-                    print(f"\n{player.name}, your score is {player.hand_value}.")
+                    scroll_print(f"\n{player.name}, your score is {player.hand_value}.")
                     print_hands(self.players)
                     break
                 elif response.lower() == "hit":
-                    card_to_deal = self.playing_deck.pop(0)
-                    player.hand.append(card_to_deal)
-                    player.hand_value += card_to_deal.value
-                    print(f"\n{player.name}, Your new card is {card_to_deal}, bringing your score to {player.hand_value}.")
+                    deal_card(player)
+                    scroll_print(f"\n{player.name}, Your new card is {player.hand[-1]}, bringing your score to {player.hand_value}.")
                     print_hands(self.players)
                 else:
-                    print("\nCommand not recognized. Please try again.\n")
+                    scroll_print("\nCommand not recognized. Please try again.\n")
 
                 if player.hand_value == 21:
-                    print("\nBlackjack!\n")
+                    scroll_print("\nBlackjack!\n")
                 elif player.hand_value > 21:
-                    print("\nBust!\n")
+                    scroll_print("\nBust!\n")
 
         #Dealer plays out their hand according to rules: must hit if value is under 17; otherwise, must stay
         def resolve_dealer(dealer):
-            print(f"\nTime to reveal the dealer's card... it's {dealer.hand[-1]}!")
+            scroll_print(f"\nTime to reveal the dealer's card... it's {dealer.hand[-1]}!")
             print_hands(self.players, False)
             while dealer.hand_value < 17:
-                card_to_deal = self.playing_deck.pop(0)
-                dealer.hand.append(card_to_deal)
-                dealer.hand_value += card_to_deal.value
-                print(f"\nThe dealer flips over a new card... {card_to_deal}. The dealer's score is now {dealer.hand_value}.")
+                deal_card(dealer)
+                scroll_print(f"\nThe dealer flips over a new card... {dealer.hand[-1]}. The dealer's score is now {dealer.hand_value}.")
                 print_hands(self.players, False)
 
             if dealer.hand_value == 21:
-                print("Dealer Blackjack!\n")
+                scroll_print("Dealer Blackjack!\n")
             elif dealer.hand_value > 21:
-                print("Dealer busts!\n")
+                scroll_print("Dealer busts!\n")
             else:
-                print(f"The dealer stays at a score of {dealer.hand_value}.")
+                scroll_print(f"The dealer stays at a score of {dealer.hand_value}.")
 
         #Chip balances are adjusted for each player according to whether or not they beat the dealer in that round. In the event of a tie score (as long as the player has NOT busted), the player simply gets back the chips that they bet
         def resolve_round(players):
@@ -224,7 +245,8 @@ class Game():
                     losing_players.append(player)
                 else:
                     push_players.append(player)
-                
+                player.rounds_played += 1
+
             if len(winning_players) > 0:
                 winning_msg = "\nWinning players:    "
                 for player in winning_players:
@@ -256,8 +278,10 @@ class Game():
                 push_msg += "\n"
             else:
                 push_msg = "\nPush: None :/\n"
+
+            final_msg = winning_msg + losing_msg + push_msg
             
-            print(winning_msg, losing_msg, push_msg)
+            scroll_print(final_msg)
 
         #Each player is asked whether they would like to continue. Players who have been reduced to 0 chips have the option to buy back in with new chips, but their overall balance is still tracked. Players who elect to leave the game are removed after being told their total earnings/losses, and the next round is played with the remaining players
         def continue_players(players):
@@ -266,7 +290,7 @@ class Game():
                 #Actions for players with chips remaining
                 if player.chips > 0:
                     while True:
-                        contin = input(f"\n{player.name}, your current balance is {player.chips}. Would you like to play another round? (yes/no)\n")
+                        contin = scroll_input(f"\n{player.name}, your current balance is {player.chips}. Would you like to play another round? (yes/no)\n")
                         if contin.lower() == "yes":
                             idx += 1
                             #Resets player hands
@@ -275,41 +299,41 @@ class Game():
                             player.bet = 0
                             break
                         elif contin.lower() == "no":
-                            #Removes player from active player list and adds them to eliminated player list
-                            print(f"\nThanks for playing, {player.name}. Your total earnings in this game were {player.earnings} chips.\n")
-                            self.eliminated_players.append(self.players.pop(idx))
+                            #Removes player from active player list; they will remain in the all players list
+                            scroll_print(f"\nThanks for playing, {player.name}. Your total earnings in this game were {player.earnings} chips.\n")
+                            self.players.pop(idx)
                             idx += 1
                             break
                         else:
-                            print("\nCommand not recognized. Please try again.\n")
+                            scroll_print("\nCommand not recognized. Please try again.\n")
                 #Actions for players out of chips
                 else:
                     while True:
-                        contin = input(f"\n{player.name}, you are out of chips! Would you like to buy back in? (yes/no)\n")
+                        contin = scroll_input(f"\n{player.name}, you are out of chips! Would you like to buy back in? (yes/no)\n")
                         if contin.lower() == "yes":
                             while True:
                                 try:
-                                    player.chips = int(input(f"\n{player.name}, How many chips would you like to buy back in with?\n"))
+                                    player.chips = int(scroll_input(f"\n{player.name}, How many chips would you like to buy back in with?\n"))
                                     if player.chips <= 0:
-                                        print("\nI'm sorry, you must specify a postive whole number of chips. Please try again.\n")
+                                        scroll_print("\nI'm sorry, you must specify a postive whole number of chips. Please try again.\n")
                                     else:
-                                        print(f"\nOkay {player.name}, you're back in with {player.chips} more chips!\n")
+                                        scroll_print(f"\nOkay {player.name}, you're back in with {player.chips} more chips!\n")
                                         idx += 1
                                         player.hand = []
                                         player.hand_value = 0
                                         player.bet = 0
                                         break
                                 except ValueError:
-                                    print("\nI'm sorry, you must specify a positive whole number of chips. Please try again.\n")
+                                    scroll_print("\nI'm sorry, you must specify a positive whole number of chips. Please try again.\n")
                             break
                         elif contin.lower() == "no":
-                            #Removes player from active player list and adds them to eliminated player list
-                            print(f"\nThanks for playing, {player.name}. Your total earnings in this game were {player.earnings} chips.\n")
-                            self.eliminated_players.append(self.players.pop(idx))
+                            #Removes player from active player list; they will remain in the all players list
+                            scroll_print(f"\nThanks for playing, {player.name}. Your total earnings in this game were {player.earnings} chips.\n")
+                            self.players.pop(idx)
                             idx += 1
                             break
                         else:
-                            print("\nCommand not recognized. Please try again.\n")
+                            scroll_print("\nCommand not recognized. Please try again.\n")
 
         #Rotates player order for the next round, moving first player to the last position before the dealer, and everybody else forward one
         def rotate_players(players):
@@ -324,39 +348,43 @@ class Game():
         #Game flow
         #Sets number of players
         self.num_players = set_num_players()
-        print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total.")
+        scroll_print(f"\nSo that's {self.num_players} players. Count the dealer and we'll have {self.num_players + 1} in total.\n")
 
         #Initializes player list
         self.players = set_players(self.num_players)
+        self.all_players = self.players[:-1]
         
         #Collects player names
         get_names(self.players)
 
         #Collects chip buy-ins
-        print("\n\nNow that we have your names, it's time to collect your buy-ins. We'll go around the table, player by player. You can start with as many chips as you want, as long as it's a whole number and it's more than zero.\n")
+        scroll_print("\n\nNow that we have your names, it's time to collect your buy-ins. We'll go around the table, player by player. You can start with as many chips as you want, as long as it's a whole number and it's more than zero.\n")
         
         collect_buyin(self.players)
 
-        print("\n\nNow that all of that's out of the way, let's finally play the game!")
+        scroll_print("\n\nNow that all of that's out of the way, let's finally play the game!")
 
         #Game continues until there are no players left (not counting the dealer)
         while len(self.players) > 1:
             self.round_num += 1
             #Reshuffles deck at a minimum point, depending on the number players and number of decks
             if len(self.playing_deck) < (len(self.players)) * 6 * self.num_decks:
-                print("\nLow on cards. Reshuffling the deck...\n")
+                scroll_print("\nLow on cards. Reshuffling the deck...\n")
                 self.playing_deck = self.shuffle_deck()
-                print("Done.\n")
+                scroll_print("Done.\n")
 
-            print(f"\nBeginning Round {self.round_num}...\n")
+            scroll_print(f"\nBeginning Round {self.round_num}...\n")
             
             #Collects bets
-            print("\nTime to collect the bets for the round.\n")
+            scroll_print("\nTime to collect the bets for the round.\n")
             collect_bets(self.players)
 
             #Each player is dealt their cards
-            print("\nTime to deal the cards.\n")
-            deal_cards(self.players)
+            scroll_print("\nTime to deal the cards.\n")
+            for i in range(2):
+                for player in self.players:
+                    deal_card(player)
+
             #Displays hands and bets
 
             print_hands(self.players)
@@ -369,7 +397,7 @@ class Game():
             resolve_dealer(self.players[-1])
 
             #Distributes winnings or takes bets at end of round
-            print("\nResolving the bets...\n")
+            scroll_print("\nResolving the bets...\n")
             resolve_round(self.players)
             
             #Asks each player whether they wish to play another round
@@ -377,15 +405,40 @@ class Game():
 
             #The game continues until the last remaining player(s) elect to leave
             if len(self.players) > 1:
-                print("\nRotating deal order for the next round...\n")
+                scroll_print("\nRotating deal order for the next round...\n")
                 self.players = rotate_players(self.players)
                 #resets dealer hand and score
                 self.players[-1].hand = []
                 self.players[-1].hand_value = 0
-                print("\nDone.\n")
-                print("\nOnto the next round!\n")
+                scroll_print("\nDone.\n")
+                scroll_print("\nOnto the next round!\n")
 
         #Once game is over, prints out summary of how each player performed
+        scroll_print("\nThat was fun! Let's see how everyone did today...\n")
+        for player in self.all_players:
+            if player.earnings >= 0:
+                winnings = f"won {player.earnings}"
+            else:
+                winnings = f"lost {-player.earnings}"
+
+            if player.earnings / player.buy_in <= -0.5:
+                comment = "Hope that wasn't your life savings!"
+            elif player.earnings / player.buy_in <= -0.2:
+                comment = "Better luck next time."
+            elif player.earnings / player.buy_in < 0:
+                comment = "Not your best day, but it could have been a lot worse."
+            elif player.earnings / player.buy_in == 0:
+                comment = "You know gambling usually involves taking risks, right?"
+            elif player.earnings / player.buy_in < 0.2:
+                comment = "Got yourself a little extra spending money!"
+            elif player.earnings / player.buy_in < 1:
+                comment = "Congratulations!"
+            elif player.earnings / player.buy_in < 3:
+                comment = "Wow, looks like drinks are on you!"
+            else:
+                comment = "I'm sorry, but you will no longer be welcome at this table."
+
+            scroll_print(f"\n{player.name}, you played {player.rounds_played} rounds of blackjack today, and overall you {winnings} chips against a total buy-in of {player.buy_in}. {comment}\n")
 
 test_game = Game()
 test_game.play()
