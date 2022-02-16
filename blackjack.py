@@ -2,6 +2,10 @@ import random
 import time
 import sys
 
+
+card_values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
+card_suits = ["♣", "♠", "♦", "♥"]
+
 #Will simulate the experience of playing blackjack in the casino right in the terminal of the computer
 def scroll_print(msg):
     time.sleep(0.25)
@@ -17,17 +21,27 @@ def scroll_input(msg):
 
 #Class for the cards in the game
 class Card():
-    card_values = {"2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "J": 10, "Q": 10, "K": 10, "A": 11}
-    card_suits = ["♣", "♠", "♦", "♥"]
     def __init__(self, title, suit):
         self.title = title
         self.suit = suit
-        self.value = Card.card_values[self.title]
+        self.value = card_values[self.title]
 
     #String representation of Card
     def __repr__(self):
         return self.title + self.suit
-    
+
+#Class for card deck
+class Deck():
+    def __init__(self, num_decks=1):
+        self.num_decks = num_decks
+        self.active_cards = []
+        self.discarded_cards = []
+        for i in range(num_decks):
+            for value in card_values.keys():
+                for suit in card_suits:
+                    self.active_cards.append(Card(value, suit))
+        print(self.active_cards)
+
 #Class for the players of the game
 class Player(): 
     def __init__(self):
@@ -53,8 +67,8 @@ class Game():
         #Sets up ordered deck for easy shuffling
         self.ordered_deck = []
         for n in range(self.num_decks):
-            for card_title in Card.card_values.keys():
-                for card_suit in Card.card_suits:
+            for card_title in card_values.keys():
+                for card_suit in card_suits:
                     self.ordered_deck.append(Card(card_title, card_suit))
         #Shuffles deck one card at a time to create playing deck
         self.playing_deck = self.shuffle_deck()
@@ -441,4 +455,5 @@ class Game():
             scroll_print(f"\n{player.name}, you played {player.rounds_played} rounds of blackjack today, and overall you {winnings} chips against a total buy-in of {player.buy_in}. {comment}\n")
 
 test_game = Game()
-test_game.play()
+# test_game.play()
+test_deck = Deck(1)
