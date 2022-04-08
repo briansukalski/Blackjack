@@ -62,10 +62,26 @@ class Probability_Calculator():
         self.value_counts = {2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0}
         self.total_unrevealed_cards = 0
         for i in range(num_decks):
+            #Fills in total number of cards of each value in the playing deck
             for value in card_values.values():
                 for suit in card_suits:
                     self.value_counts[value] += 1
                     self.total_unrevealed_cards += 1
+
+    def calculate_bust_probability(self, current_score, num_aces):
+        total_bust_cards = 0
+        #Can't bust if you're holding an unused ace, since aces are soft
+        if num_aces > 0:
+            bust_probability = 0
+        #Tallies up the number of cards that will result in a bust
+        else:
+            for value in self.value_counts.keys():
+                #Excludes aces from calculation, since aces are soft (you can't bust on a dealt ace)
+                if value + current_score > 21 and value != 11:
+                    total_bust_cards += self.value_counts[value]
+            bust_probability = total_bust_cards/self.total_unrevealed_cards
+
+        return bust_probability
         
 
 #Class that will actually be used to play the game of blackjack
@@ -472,3 +488,4 @@ class Game():
 # test_deck = Deck(1)
 test_p_c = Probability_Calculator(3)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
+print(test_p_c.calculate_bust_probability(15, 0))
