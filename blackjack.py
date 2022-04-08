@@ -55,6 +55,19 @@ class Player():
         self.rounds_played = 0
         self.buy_in = 0
 
+#Class for calculating game probabilities
+class Probability_Calculator():
+    def __init__(self, num_decks):
+        self.num_decks = num_decks
+        self.value_counts = {2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0}
+        self.total_unrevealed_cards = 0
+        for i in range(num_decks):
+            for value in card_values.values():
+                for suit in card_suits:
+                    self.value_counts[value] += 1
+                    self.total_unrevealed_cards += 1
+        
+
 #Class that will actually be used to play the game of blackjack
 class Game():
 
@@ -454,6 +467,8 @@ class Game():
 
             scroll_print(f"\n{player.name}, you played {player.rounds_played} rounds of blackjack today, and overall you {winnings} chips against a total buy-in of {player.buy_in}. {comment}\n")
 
-test_game = Game()
+# test_game = Game()
 # test_game.play()
-test_deck = Deck(1)
+# test_deck = Deck(1)
+test_p_c = Probability_Calculator(3)
+print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
