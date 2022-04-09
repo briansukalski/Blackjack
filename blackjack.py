@@ -82,10 +82,17 @@ class Probability_Calculator():
 
         return bust_probability
 
-    def calculate_dealer_bust_probability(self, current_score, num_aces, depth=1):
+    def calculate_dealer_bust_probability(self, current_score, num_aces, working_value_counts, working_total_unrevealed_cards):
         bust_probability = 0
+        #Creates copy of master unrevealed cards dictionary that can be used to process probabilities of hypothetical scenarios without affecting the master
+        recursive_value_counts = working_value_counts.copy()
+        #Also creates a temp variable for total unrevealed cards for the same purpose
+        recursive_total_unrevealed_cards = working_total_unrevealed_cards
         #Loops through each possible card that could be drawn and processes depending on whether or not it will result in a bust
-        for value in self.value_counts.keys():
+        for value in recursive_value_counts:
+            #If there are no more cards of current value left unrevealed in deck, skips this value
+            if recursive_value_counts[value] == 0:
+                continue
             #Checks for ace
             if value == 11:
                 num_aces += 1
@@ -98,8 +105,11 @@ class Probability_Calculator():
                     num_aces -= 1
             #Value requires dealer to hit again, will trigger recursive call to determine probability of bust somewhere down the line
             if new_score <= 16:
-                #Recursively call function with new score
-                bust_probability += self.value_counts[value] / self.total_unrevealed_cards * self.calculate_dealer_bust_probability(new_score, num_aces, depth + 1)
+                #Sets up recursive value_counts dictionary and total_unrevealed_cards value by removing the current value from the recursive call's calculation
+                recursive_value_counts[value] -= 1
+                recursive_total_unrevealed_cards -= 1
+                #Recursively call function with new score, and designates one of current value's counts to be removed from the unrevealed card value dictionary
+                bust_probability += working_value_counts[value] / working_total_unrevealed_cards * self.calculate_dealer_bust_probability(new_score, num_aces, recursive_value_counts, recursive_total_unrevealed_cards)
             #If value goes over 21, results in a bust and probability is added
             elif new_score > 21:
                 #Adds probability of drawing particular value to bust probability (since current value will result in a bust)
@@ -510,16 +520,16 @@ class Game():
 # test_game = Game()
 # test_game.play()
 # test_deck = Deck(1)
-test_p_c = Probability_Calculator(3)
+test_p_c = Probability_Calculator(1)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
 print(test_p_c.calculate_bust_probability(15, 0))
-print(test_p_c.calculate_dealer_bust_probability(2, 0))
-print(test_p_c.calculate_dealer_bust_probability(3, 0))
-print(test_p_c.calculate_dealer_bust_probability(4, 0))
-print(test_p_c.calculate_dealer_bust_probability(5, 0))
-print(test_p_c.calculate_dealer_bust_probability(6, 0))
-print(test_p_c.calculate_dealer_bust_probability(7, 0))
-print(test_p_c.calculate_dealer_bust_probability(8, 0))
-print(test_p_c.calculate_dealer_bust_probability(9, 0))
-print(test_p_c.calculate_dealer_bust_probability(10, 0))
-print(test_p_c.calculate_dealer_bust_probability(11, 1))
+print(2, test_p_c.calculate_dealer_bust_probability(2, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(3, test_p_c.calculate_dealer_bust_probability(3, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(4, test_p_c.calculate_dealer_bust_probability(4, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(5, test_p_c.calculate_dealer_bust_probability(5, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(6, test_p_c.calculate_dealer_bust_probability(6, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(7, test_p_c.calculate_dealer_bust_probability(7, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(8, test_p_c.calculate_dealer_bust_probability(8, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(9, test_p_c.calculate_dealer_bust_probability(9, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(10, test_p_c.calculate_dealer_bust_probability(10, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(11, test_p_c.calculate_dealer_bust_probability(11, 1, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
