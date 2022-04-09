@@ -88,28 +88,31 @@ class Probability_Calculator():
         recursive_value_counts = working_value_counts.copy()
         #Also creates a temp variable for total unrevealed cards for the same purpose
         recursive_total_unrevealed_cards = working_total_unrevealed_cards
+
         #Loops through each possible card that could be drawn and processes depending on whether or not it will result in a bust
         for value in recursive_value_counts:
+            #Creates a temp variable for number of aces to keep track of changes for recursive calls that will carry out hypothetical calculations
+            recursive_num_aces = num_aces
             #If there are no more cards of current value left unrevealed in deck, skips this value
             if recursive_value_counts[value] == 0:
                 continue
             #Checks for ace
             if value == 11:
-                num_aces += 1
+                recursive_num_aces += 1
             #Applies new value
             new_score = current_score + value
             #Applies soft ace to prevent bust if available
             if new_score > 21:
-                if num_aces > 0:
+                if recursive_num_aces > 0:
                     new_score -= 10
-                    num_aces -= 1
+                    recursive_num_aces -= 1
             #Value requires dealer to hit again, will trigger recursive call to determine probability of bust somewhere down the line
             if new_score <= 16:
                 #Sets up recursive value_counts dictionary and total_unrevealed_cards value by removing the current value from the recursive call's calculation
                 recursive_value_counts[value] -= 1
                 recursive_total_unrevealed_cards -= 1
                 #Recursively call function with new score, and designates one of current value's counts to be removed from the unrevealed card value dictionary
-                bust_probability += working_value_counts[value] / working_total_unrevealed_cards * self.calculate_dealer_bust_probability(new_score, num_aces, recursive_value_counts, recursive_total_unrevealed_cards)
+                bust_probability += working_value_counts[value] / working_total_unrevealed_cards * self.calculate_dealer_bust_probability(new_score, recursive_num_aces, recursive_value_counts, recursive_total_unrevealed_cards)
             #If value goes over 21, results in a bust and probability is added
             elif new_score > 21:
                 #Adds probability of drawing particular value to bust probability (since current value will result in a bust)
