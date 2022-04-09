@@ -95,7 +95,7 @@ class Probability_Calculator():
             if new_score > 21:
                 if num_aces > 0:
                     new_score -= 10
-            print(new_score, depth, value)
+                    num_aces -= 1
             #Value requires dealer to hit again, will trigger recursive call to determine probability of bust somewhere down the line
             if new_score <= 16:
                 #Recursively call function with new score
@@ -514,12 +514,12 @@ test_p_c = Probability_Calculator(3)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
 print(test_p_c.calculate_bust_probability(15, 0))
 print(test_p_c.calculate_dealer_bust_probability(2, 0))
-# print(test_p_c.calculate_dealer_bust_probability(3, 0))
-# print(test_p_c.calculate_dealer_bust_probability(4, 0))
-# print(test_p_c.calculate_dealer_bust_probability(5, 0))
-# print(test_p_c.calculate_dealer_bust_probability(6, 0))
-# print(test_p_c.calculate_dealer_bust_probability(7, 0))
-# print(test_p_c.calculate_dealer_bust_probability(8, 0))
-# print(test_p_c.calculate_dealer_bust_probability(9, 0))
-# print(test_p_c.calculate_dealer_bust_probability(10, 0))
-# print(test_p_c.calculate_dealer_bust_probability(11, 0))
+print(test_p_c.calculate_dealer_bust_probability(3, 0))
+print(test_p_c.calculate_dealer_bust_probability(4, 0))
+print(test_p_c.calculate_dealer_bust_probability(5, 0))
+print(test_p_c.calculate_dealer_bust_probability(6, 0))
+print(test_p_c.calculate_dealer_bust_probability(7, 0))
+print(test_p_c.calculate_dealer_bust_probability(8, 0))
+print(test_p_c.calculate_dealer_bust_probability(9, 0))
+print(test_p_c.calculate_dealer_bust_probability(10, 0))
+print(test_p_c.calculate_dealer_bust_probability(11, 1))
