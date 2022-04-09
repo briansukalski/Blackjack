@@ -69,20 +69,44 @@ class Probability_Calculator():
                     self.total_unrevealed_cards += 1
 
     def calculate_bust_probability(self, current_score, num_aces):
-        total_bust_cards = 0
+        bust_probability = 0
         #Can't bust if you're holding an unused ace, since aces are soft
         if num_aces > 0:
-            bust_probability = 0
+            return bust_probability
         #Tallies up the number of cards that will result in a bust
         else:
             for value in self.value_counts.keys():
                 #Excludes aces from calculation, since aces are soft (you can't bust on a dealt ace)
                 if value + current_score > 21 and value != 11:
-                    total_bust_cards += self.value_counts[value]
-            bust_probability = total_bust_cards/self.total_unrevealed_cards
+                    bust_probability += self.value_counts[value] / self.total_unrevealed_cards
 
         return bust_probability
+
+    def calculate_dealer_bust_probability(self, current_score, num_aces, depth=1):
+        bust_probability = 0
+        #Loops through each possible card that could be drawn and processes depending on whether or not it will result in a bust
+        for value in self.value_counts.keys():
+            #Checks for ace
+            if value == 11:
+                num_aces += 1
+            #Applies new value
+            new_score = current_score + value
+            #Applies soft ace to prevent bust if available
+            if new_score > 21:
+                if num_aces > 0:
+                    new_score -= 10
+            print(new_score, depth, value)
+            #Value requires dealer to hit again, will trigger recursive call to determine probability of bust somewhere down the line
+            if new_score <= 16:
+                #Recursively call function with new score
+                bust_probability += self.value_counts[value] / self.total_unrevealed_cards * self.calculate_dealer_bust_probability(new_score, num_aces, depth + 1)
+            #If value goes over 21, results in a bust and probability is added
+            elif new_score > 21:
+                #Adds probability of drawing particular value to bust probability (since current value will result in a bust)
+                bust_probability += self.value_counts[value] / self.total_unrevealed_cards
+            #Values between 17 and 21 will result in the dealer staying and won't affect bust probability
         
+        return bust_probability
 
 #Class that will actually be used to play the game of blackjack
 class Game():
@@ -489,3 +513,13 @@ class Game():
 test_p_c = Probability_Calculator(3)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
 print(test_p_c.calculate_bust_probability(15, 0))
+print(test_p_c.calculate_dealer_bust_probability(2, 0))
+# print(test_p_c.calculate_dealer_bust_probability(3, 0))
+# print(test_p_c.calculate_dealer_bust_probability(4, 0))
+# print(test_p_c.calculate_dealer_bust_probability(5, 0))
+# print(test_p_c.calculate_dealer_bust_probability(6, 0))
+# print(test_p_c.calculate_dealer_bust_probability(7, 0))
+# print(test_p_c.calculate_dealer_bust_probability(8, 0))
+# print(test_p_c.calculate_dealer_bust_probability(9, 0))
+# print(test_p_c.calculate_dealer_bust_probability(10, 0))
+# print(test_p_c.calculate_dealer_bust_probability(11, 0))
