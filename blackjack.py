@@ -67,7 +67,12 @@ class Probability_Calculator():
                 for suit in card_suits:
                     self.value_counts[value] += 1
                     self.total_unrevealed_cards += 1
-
+                    
+    def reveal_card(self, value):
+        #Simulates revealing a new card from the deck, meaning that card is no longer part of future probability calculations
+        self.value_counts[value] -= 1
+        self.total_unrevealed_cards -= 1
+        
     def calculate_bust_probability(self, current_score, num_aces):
         bust_probability = 0
         #Can't bust if you're holding an unused ace, since aces are soft
@@ -139,6 +144,8 @@ class Game():
         #Shuffles deck one card at a time to create playing deck
         self.playing_deck = self.shuffle_deck()
         self.num_decks = num_decks
+        #Sets up probability calculator to provide dynamic probability calculations throughout the game
+        self.probabilties = Probability_Calculator(self.num_decks)
 
     #Function to shuffle playing deck(s)
     def shuffle_deck(self):
@@ -238,6 +245,8 @@ class Game():
                     player.num_aces += 1
                 player.hand.append(new_card)
                 player.hand_value += new_card.value
+                #Adjusts probability calculator, removing newly-dealt card
+                
                 #Aces are soft; their value switches from 11 to 1 if the player busts
                 if player.hand_value > 21 and player.num_aces > 0:
                     player.hand_value -= 10
