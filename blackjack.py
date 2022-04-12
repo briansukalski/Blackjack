@@ -68,11 +68,11 @@ class Probability_Calculator():
                     self.value_counts[value] += 1
                     self.total_unrevealed_cards += 1
                     
-    def reveal_card(self, value):
+    def pop_card(self, value):
         #Simulates revealing a new card from the deck, meaning that card is no longer part of future probability calculations
         self.value_counts[value] -= 1
         self.total_unrevealed_cards -= 1
-        
+
     def calculate_bust_probability(self, current_score, num_aces):
         bust_probability = 0
         #Can't bust if you're holding an unused ace, since aces are soft
@@ -245,8 +245,9 @@ class Game():
                     player.num_aces += 1
                 player.hand.append(new_card)
                 player.hand_value += new_card.value
-                #Adjusts probability calculator, removing newly-dealt card
-                
+                #Adjusts probability calculator, removing newly-dealt card, unless the card is the dealer's second card, which is not initially revealed
+                if not(player.name == "Dealer" and len(player.hand) == 2):
+                    self.probabilities.pop_card(new_card.value)
                 #Aces are soft; their value switches from 11 to 1 if the player busts
                 if player.hand_value > 21 and player.num_aces > 0:
                     player.hand_value -= 10
@@ -308,6 +309,9 @@ class Game():
         #Dealer plays out their hand according to rules: must hit if value is under 17; otherwise, must stay
         def resolve_dealer(dealer):
             scroll_print(f"\nTime to reveal the dealer's card... it's {dealer.hand[-1]}!")
+            #Removes newly-revealed card from probability calculator
+            self.probabilities.pop_card(dealer.hand[-1].value)
+
             print_hands(self.players, False)
             while dealer.hand_value < 17:
                 deal_card(dealer)
@@ -460,6 +464,8 @@ class Game():
             if len(self.playing_deck) < (len(self.players)) * 6 * self.num_decks:
                 scroll_print("\nLow on cards. Reshuffling the deck...\n")
                 self.playing_deck = self.shuffle_deck()
+                #Also resets probability calculator
+                self.probabilities = Probability_Calculator(self.num_decks)
                 scroll_print("Done.\n")
 
             scroll_print(f"\nBeginning Round {self.round_num}...\n")
