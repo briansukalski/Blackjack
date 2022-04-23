@@ -8,11 +8,18 @@ def add_dictionaries(dict_1, dict_2, dict_2_factor):
             print(f"Dictionary keys do not match: key {key} not found in dictionary 2")
             return
     
-    print ("Match!")
+    #Checks that all values in each dictionary are numeric
+    for val in dict_1.values():
+        if not isinstance(val, (int, float)):
+            print(f"Value {val} is not a number")
+            return
+    for val in dict_2.values():
+        if not isinstance(val, (int, float)):
+            print(f"Value {val} is not a number")
+            return
+    
+    #If values match, adds values from dict_2 into dict_1, modified by the provided factor
+    for key in dict_1.keys():
+        dict_1[key] += dict_2[key] * dict_2_factor
+    
     return
-
-score_probabilities = {17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0}
-
-score_probabilites_2 = {17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0}
-
-add_dictionaries(score_probabilities, score_probabilites_2, 1)
