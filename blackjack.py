@@ -87,7 +87,8 @@ class Probability_Calculator():
 
         return bust_probability
 
-    def calculate_dealer_bust_probability(self, current_score, num_aces, working_value_counts, working_total_unrevealed_cards):
+    def calculate_dealer_score_probabilities(self, current_score, num_aces, working_value_counts, working_total_unrevealed_cards):
+        score_probabilities = {17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0}
         bust_probability = 0
         #Creates copy of master unrevealed cards dictionary that can be used to process probabilities of hypothetical scenarios without affecting the master
         recursive_value_counts = working_value_counts.copy()
@@ -117,7 +118,7 @@ class Probability_Calculator():
                 recursive_value_counts[value] -= 1
                 recursive_total_unrevealed_cards -= 1
                 #Recursively call function with new score, and designates one of current value's counts to be removed from the unrevealed card value dictionary
-                bust_probability += working_value_counts[value] / working_total_unrevealed_cards * self.calculate_dealer_bust_probability(new_score, recursive_num_aces, recursive_value_counts, recursive_total_unrevealed_cards)
+                bust_probability += working_value_counts[value] / working_total_unrevealed_cards * self.calculate_dealer_score_probabilities(new_score, recursive_num_aces, recursive_value_counts, recursive_total_unrevealed_cards)
             #If value goes over 21, results in a bust and probability is added
             elif new_score > 21:
                 #Adds probability of drawing particular value to bust probability (since current value will result in a bust)
@@ -541,13 +542,13 @@ class Game():
 test_p_c = Probability_Calculator(1)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
 print(test_p_c.calculate_bust_probability(15, 0))
-print(2, test_p_c.calculate_dealer_bust_probability(2, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(3, test_p_c.calculate_dealer_bust_probability(3, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(4, test_p_c.calculate_dealer_bust_probability(4, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(5, test_p_c.calculate_dealer_bust_probability(5, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(6, test_p_c.calculate_dealer_bust_probability(6, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(7, test_p_c.calculate_dealer_bust_probability(7, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(8, test_p_c.calculate_dealer_bust_probability(8, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(9, test_p_c.calculate_dealer_bust_probability(9, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(10, test_p_c.calculate_dealer_bust_probability(10, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
-print(11, test_p_c.calculate_dealer_bust_probability(11, 1, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(2, test_p_c.calculate_dealer_score_probabilities(2, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(3, test_p_c.calculate_dealer_score_probabilities(3, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(4, test_p_c.calculate_dealer_score_probabilities(4, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(5, test_p_c.calculate_dealer_score_probabilities(5, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(6, test_p_c.calculate_dealer_score_probabilities(6, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(7, test_p_c.calculate_dealer_score_probabilities(7, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(8, test_p_c.calculate_dealer_score_probabilities(8, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(9, test_p_c.calculate_dealer_score_probabilities(9, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(10, test_p_c.calculate_dealer_score_probabilities(10, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+print(11, test_p_c.calculate_dealer_score_probabilities(11, 1, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
