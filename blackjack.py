@@ -40,7 +40,6 @@ class Deck():
             for value in card_values.keys():
                 for suit in card_suits:
                     self.active_cards.append(Card(value, suit))
-        print(self.active_cards)
 
 #Class for the players of the game
 class Player(): 
@@ -87,45 +86,32 @@ class Probability_Calculator():
 
         return bust_probability
 
-    def calculate_dealer_score_probabilities(self, current_score, num_aces, working_value_counts, working_total_unrevealed_cards):
-        score_probabilities = {17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0}
-        bust_probability = 0
-        #Creates copy of master unrevealed cards dictionary that can be used to process probabilities of hypothetical scenarios without affecting the master
-        recursive_value_counts = working_value_counts.copy()
-        #Also creates a temp variable for total unrevealed cards for the same purpose
-        recursive_total_unrevealed_cards = working_total_unrevealed_cards
+    def calculate_dealer_score_probabilities(self, current_score, num_aces, value_counts, total_unrevealed_cards):
+        #Probabilities for all the possible next scores are stored in a dictionary
+        new_score_probabilities = {4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0, 21: 0, 22: 0}
 
         #Loops through each possible card that could be drawn and processes depending on whether or not it will result in a bust
-        for value in recursive_value_counts:
-            #Creates a temp variable for number of aces to keep track of changes for recursive calls that will carry out hypothetical calculations
-            recursive_num_aces = num_aces
-            #If there are no more cards of current value left unrevealed in deck, skips this value
-            if recursive_value_counts[value] == 0:
-                continue
+        for value in value_counts:
             #Checks for ace
             if value == 11:
-                recursive_num_aces += 1
+                num_aces += 1
             #Applies new value
             new_score = current_score + value
             #Applies soft ace to prevent bust if available
             if new_score > 21:
-                if recursive_num_aces > 0:
+                if num_aces > 0:
                     new_score -= 10
-                    recursive_num_aces -= 1
-            #Value requires dealer to hit again, will trigger recursive call to determine probability of bust somewhere down the line
-            if new_score <= 16:
-                #Sets up recursive value_counts dictionary and total_unrevealed_cards value by removing the current value from the recursive call's calculation
-                recursive_value_counts[value] -= 1
-                recursive_total_unrevealed_cards -= 1
-                #Recursively call function with new score, and designates one of current value's counts to be removed from the unrevealed card value dictionary
-                bust_probability += working_value_counts[value] / working_total_unrevealed_cards * self.calculate_dealer_score_probabilities(new_score, recursive_num_aces, recursive_value_counts, recursive_total_unrevealed_cards)
+                    num_aces -= 1
             #If value goes over 21, results in a bust and probability is added
-            elif new_score > 21:
+            if new_score > 21:
                 #Adds probability of drawing particular value to bust probability (since current value will result in a bust)
-                bust_probability += self.value_counts[value] / self.total_unrevealed_cards
+                new_score_probabilities[22] += self.value_counts[value] / self.total_unrevealed_cards
             #Values between 17 and 21 will result in the dealer staying and won't affect bust probability
+            #If value is between 17 and 21, results in the dealer holding and probability is added
+            else:
+                new_score_probabilities[new_score] += self.value_counts[value] / self.total_unrevealed_cards
         
-        return bust_probability
+        return new_score_probabilities
 
 #Class that will actually be used to play the game of blackjack
 class Game():
@@ -541,7 +527,6 @@ class Game():
 # test_deck = Deck(1)
 test_p_c = Probability_Calculator(1)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
-print(test_p_c.calculate_bust_probability(15, 0))
 print(2, test_p_c.calculate_dealer_score_probabilities(2, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
 print(3, test_p_c.calculate_dealer_score_probabilities(3, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
 print(4, test_p_c.calculate_dealer_score_probabilities(4, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
