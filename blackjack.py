@@ -102,14 +102,23 @@ class Probability_Calculator():
                 if num_aces > 0:
                     new_score -= 10
                     num_aces -= 1
-            #If value goes over 21, results in a bust and probability is added
+            #If value goes over 21, results in a bust and probability
             if new_score > 21:
                 #Adds probability of drawing particular value to bust probability (since current value will result in a bust)
-                new_score_probabilities[22] += self.value_counts[value] / self.total_unrevealed_cards
+                new_score_probabilities[22] += value_counts[value] / total_unrevealed_cards
             #Values between 17 and 21 will result in the dealer staying and won't affect bust probability
             #If value is between 17 and 21, results in the dealer holding and probability is added
+            elif 17 <= new_score <= 21:
+                new_score_probabilities[new_score] += value_counts[value] / total_unrevealed_cards
+            #If value is under 17, recursively calls function to simulate continuing to have the dealer play until they reach at least 17 as a score
             else:
-                new_score_probabilities[new_score] += self.value_counts[value] / self.total_unrevealed_cards
+                #Sets up recursive variables so that function can be called recursively without interfering with function's variables
+                recursive_value_counts = value_counts.copy()
+                recursive_value_counts[value] -= 1
+                recursive_total_unrevealed_cards = total_unrevealed_cards
+                recursive_total_unrevealed_cards -= 1
+                recursive_probability_factor = value_counts[value] / total_unrevealed_cards
+                add_dictionaries(new_score_probabilities, self.calculate_dealer_score_probabilities(new_score, num_aces, recursive_value_counts, recursive_total_unrevealed_cards), recursive_probability_factor)
         
         return new_score_probabilities
 
@@ -527,13 +536,34 @@ class Game():
 # test_deck = Deck(1)
 test_p_c = Probability_Calculator(1)
 print(test_p_c.value_counts, test_p_c.total_unrevealed_cards)
+test_p_c.value_counts[2] -= 1
+test_p_c.total_unrevealed_cards -= 1
 print(2, test_p_c.calculate_dealer_score_probabilities(2, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[2] += 1
+test_p_c.value_counts[3] -= 1
 print(3, test_p_c.calculate_dealer_score_probabilities(3, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[3] += 1
+test_p_c.value_counts[4] -= 1
 print(4, test_p_c.calculate_dealer_score_probabilities(4, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[4] += 1
+test_p_c.value_counts[5] -= 1
 print(5, test_p_c.calculate_dealer_score_probabilities(5, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[5] += 1
+test_p_c.value_counts[6] -= 1
 print(6, test_p_c.calculate_dealer_score_probabilities(6, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[6] += 1
+test_p_c.value_counts[7] -= 1
 print(7, test_p_c.calculate_dealer_score_probabilities(7, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[7] += 1
+test_p_c.value_counts[8] -= 1
 print(8, test_p_c.calculate_dealer_score_probabilities(8, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[8] += 1
+test_p_c.value_counts[9] -= 1
 print(9, test_p_c.calculate_dealer_score_probabilities(9, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[9] += 1
+test_p_c.value_counts[10] -= 1
 print(10, test_p_c.calculate_dealer_score_probabilities(10, 0, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[10] += 1
+test_p_c.value_counts[11] -= 1
 print(11, test_p_c.calculate_dealer_score_probabilities(11, 1, test_p_c.value_counts, test_p_c.total_unrevealed_cards))
+test_p_c.value_counts[11] += 1
